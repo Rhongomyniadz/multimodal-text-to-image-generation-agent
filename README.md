@@ -10,32 +10,32 @@ The system follows a modular design consisting of three core roles: The Brain (P
 
 ```mermaid
 flowchart TD
-    User([User]) -->|1. Input: Draw a cyberpunk cat| UI[Streamlit Web UI]
+  User([User]) -->|1. Input: Draw a cyberpunk cat| UI[Streamlit Web UI]
 
-    subgraph BrainMemory["Brain and Memory"]
-        UI -->|2. Request + History| Brain["Gemini 2.5 Flash (Brain)"]
-        Brain <--> |Read/Write Context| Memory[(agent_memory.json)]
-        Brain -->|3. Structured Prompt (JSON)| UI
-    end
+  subgraph BrainMemory["Brain and Memory"]
+    UI -->|2. Request + History| Brain[Gemini 2.5 Flash (Brain)]
+    Brain -->|Read context| Memory[(agent_memory.json)]
+    Memory -->|Write context| Brain
+    Brain -->|3. Structured Prompt (JSON)| UI
+  end
 
-    subgraph Painter["Painter"]
-        UI -->|4. Call Generation API| SDXL["Stability AI (SDXL)"]
-        SDXL -->|5. Return Base64 image| UI
-    end
+  subgraph Painter["Painter"]
+    UI -->|4. Call Generation API| SDXL[Stability AI (SDXL)]
+    SDXL -->|5. Return Base64 image| UI
+  end
 
-    subgraph VisualFeedback["Visual Feedback Loop"]
-        UI -.->|6. (Optional) Image + User Request| VLM["Gemini VLM (Critic)"]
-        VLM -->|7. Visual Analysis| Check{Pass?}
+  subgraph VisualFeedback["Visual Feedback Loop"]
+    UI -->|6. (Optional) Image + User Request| VLM[Gemini VLM (Critic)]
+    VLM -->|7. Visual Analysis| Check{Pass?}
+    Check -->|YES| Display[Display Final Image]
+    Check -->|NO (Missing elements)| AutoFix[Build Correction Prompt]
+    AutoFix -->|8. Trigger Regenerate| Brain
+  end
 
-        Check -->|YES| Display[Display Final Image]
-        Check -->|NO (Missing elements)| AutoFix[Build Correction Prompt]
-        AutoFix -->|8. Trigger Regenerate| Brain
-    end
-
-    style User fill:#f9f,stroke:#333,stroke-width:2px
-    style Brain fill:#bbf,stroke:#333,stroke-width:2px
-    style SDXL fill:#bfb,stroke:#333,stroke-width:2px
-    style VLM fill:#fbb,stroke:#333,stroke-width:2px
+  style User fill:#f9f,stroke:#333,stroke-width:2px
+  style Brain fill:#bbf,stroke:#333,stroke-width:2px
+  style SDXL fill:#bfb,stroke:#333,stroke-width:2px
+  style VLM fill:#fbb,stroke:#333,stroke-width:2px
 ```
 
 ---
