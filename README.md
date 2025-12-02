@@ -10,32 +10,32 @@ The system follows a modular design consisting of three core roles: The Brain (P
 
 ```mermaid
 flowchart TD
-  User([User]) -->|1. Input: Draw a cyberpunk cat| UI[Streamlit Web UI]
+  user(["User"]) -->|"1. Input: Draw a cyberpunk cat"| ui["Streamlit Web UI"]
 
-  subgraph BrainMemory["Brain and Memory"]
-    UI -->|2. Request + History| Brain[Gemini 2.5 Flash (Brain)]
-    Brain -->|Read context| Memory[(agent_memory.json)]
-    Memory -->|Write context| Brain
-    Brain -->|3. Structured Prompt (JSON)| UI
+  subgraph brainmem["Brain and Memory"]
+    ui -->|"2. Request + History"| brain["Gemini 2.5 Flash - Brain"]
+    brain -->|"Read context"| mem["agent_memory.json"]
+    mem -->|"Write context"| brain
+    brain -->|"3. Structured Prompt (JSON)"| ui
   end
 
-  subgraph Painter["Painter"]
-    UI -->|4. Call Generation API| SDXL[Stability AI (SDXL)]
-    SDXL -->|5. Return Base64 image| UI
+  subgraph painter["Painter"]
+    ui -->|"4. Call Generation API"| sdxl["Stability AI - SDXL"]
+    sdxl -->|"5. Return Base64 image"| ui
   end
 
-  subgraph VisualFeedback["Visual Feedback Loop"]
-    UI -->|6. (Optional) Image + User Request| VLM[Gemini VLM (Critic)]
-    VLM -->|7. Visual Analysis| Check{Pass?}
-    Check -->|YES| Display[Display Final Image]
-    Check -->|NO (Missing elements)| AutoFix[Build Correction Prompt]
-    AutoFix -->|8. Trigger Regenerate| Brain
+  subgraph feedback["Visual Feedback Loop"]
+    ui -->|"6. Optional: Image + User Request"| vlm["Gemini VLM - Critic"]
+    vlm -->|"7. Visual Analysis"| check{"Pass?"}
+    check -->|"YES"| display["Display Final Image"]
+    check -->|"NO (Missing elements)"| autofix["Build Correction Prompt"]
+    autofix -->|"8. Trigger Regenerate"| brain
   end
 
-  style User fill:#f9f,stroke:#333,stroke-width:2px
-  style Brain fill:#bbf,stroke:#333,stroke-width:2px
-  style SDXL fill:#bfb,stroke:#333,stroke-width:2px
-  style VLM fill:#fbb,stroke:#333,stroke-width:2px
+  style user fill:#f9f,stroke:#333,stroke-width:2px
+  style brain fill:#bbf,stroke:#333,stroke-width:2px
+  style sdxl fill:#bfb,stroke:#333,stroke-width:2px
+  style vlm fill:#fbb,stroke:#333,stroke-width:2px
 ```
 
 ---
