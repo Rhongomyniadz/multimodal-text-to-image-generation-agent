@@ -4,31 +4,31 @@ This is an end-to-end Intelligent Art Agent built on **Google Gemini (Brain/VLM)
 
 ---
 
-## 🏗️ System Architecture
+## System Architecture
 
 The system follows a modular design consisting of three core roles: The Brain (Prompt Engineer), The Painter (Rendering Engine), and The Critic (Quality Assurance), all orchestrated via a Streamlit frontend.
 
 ```mermaid
 graph TD
-    User[User] -->|1. Input 'Draw a cyberpunk cat'| UI[Streamlit Web UI]
+    User["User"] -->|1. Input 'Draw a cyberpunk cat'| UI["Streamlit Web UI"]
     
-    subgraph "Brain & Memory"
-        UI -->|2. Request + History| Brain
-        Brain <-->|Read/Write Context| Memory[(agent_memory.json)]
+    subgraph BrainMemory ["Brain &amp; Memory"]
+        UI -->|2. Request + History| Brain["Gemini 2.5 Flash (Brain)"]
+        Brain <-->|Read/Write Context| Memory["agent_memory.json"]
         Brain -->|3. Structured Prompt (JSON)| UI
     end
     
-    subgraph "Painter"
-        UI -->|4. Call Generation API| SDXL[Stability AI (SDXL)]
+    subgraph Painter ["Painter"]
+        UI -->|4. Call Generation API| SDXL["Stability AI (SDXL)"]
         SDXL -->|5. Return Base64 Image| UI
     end
     
-    subgraph "Visual Feedback Loop"
-        UI -.->|6. (Optional) Image + User Request| VLM[Gemini VLM (Critic)]
-        VLM -->|7. Visual Analysis| Check{Pass?}
+    subgraph VisualFeedback ["Visual Feedback Loop"]
+        UI -.->|6. (Optional) Image + User Request| VLM["Gemini VLM (Critic)"]
+        VLM -->|7. Visual Analysis| Check{"Pass?"}
         
-        Check -- YES --> Display[Display Final Image]
-        Check -- NO (Missing elements) --> AutoFix[Build Correction Prompt]
+        Check -->|YES| Display["Display Final Image"]
+        Check -->|NO (Missing elements)| AutoFix["Build Correction Prompt"]
         AutoFix -->|8. Trigger Regenerate| Brain
     end
 
@@ -75,7 +75,7 @@ graph TD
 
 ---
 
-## 🚀 How to Run the Pipeline
+## How to Run the Pipeline
 
 ### 1. Prerequisites
 
@@ -100,7 +100,7 @@ api_keys:
   stability: "YOUR_STABILITY_API_KEY" # platform.stability.ai
 
 models:
-  brain: "gemini-1.5-pro"
+  brain: "gemini-2.5-flash"
   painter: "stable-diffusion-xl-1024-v1-0"
 
 visual_feedback:
