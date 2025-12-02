@@ -3,20 +3,28 @@ import base64
 import time
 from google.genai import types
 
-# Import your logic file
+# Import your custom modules
 import pipeline
+import vlm_feedback
 
-# Page Config
+# Page Setup
 st.set_page_config(page_title="AI Art Studio", page_icon="🎨", layout="wide")
 
 # ================= SIDEBAR =================
 with st.sidebar:
-    st.header("⚙️ Settings")
+    st.header("Settings")
     st.text(f"Brain: {pipeline.config['models']['brain']}")
     st.text(f"Painter: {pipeline.config['models']['painter']}")
     
+    # Checkbox to enable/disable VLM feedback
+    enable_feedback = st.checkbox(
+        "Enable Visual Feedback", 
+        value=pipeline.config.get('visual_feedback', {}).get('enabled', True)
+    )
+    # Update config dynamically based on checkbox
+    pipeline.config['visual_feedback']['enabled'] = enable_feedback
+
     if st.button("🧹 Clear Memory", type="primary"):
-        # Call the function from pipeline.py
         pipeline.clear_memory_file()
         st.session_state.local_history = []
         st.success("Memory wiped!")
@@ -24,32 +32,31 @@ with st.sidebar:
         st.rerun()
 
 # ================= MAIN INTERFACE =================
-st.title("🎨 Context-Aware Art Generator")
+st.title("Context-Aware Art Generator")
 
-# Initialize Session State using pipeline function
+# Initialize Session State
 if "local_history" not in st.session_state:
     st.session_state.local_history = pipeline.load_memory()
 
 # 1. Display Chat History
-# We iterate through the loaded history to show previous turn
 for msg in st.session_state.local_history:
     with st.chat_message(msg.role):
-        # Extract text from parts for display
         text_content = ""
         for p in msg.parts:
             if hasattr(p, 'text'): text_content += p.text
             elif isinstance(p, dict): text_content += p.get('text', '')
         
-        # If it looks like JSON (Model response), make it pretty
+        # Pretty print JSON for model responses
         if msg.role == "model" and "{" in text_content:
             st.code(text_content, language="json")
         else:
             st.write(text_content)
 
 # 2. Handle New Input
+# CRITICAL: Everything below this line must be indented!
 if user_input := st.chat_input("Describe your idea..."):
     
-    # Display User Message
+    # Show User Message
     with st.chat_message("user"):
         st.write(user_input)
     
@@ -97,40 +104,77 @@ if user_input := st.chat_input("Describe your idea..."):
     )
 
     with st.chat_message("model"):
-        status = st.status("Agent is optimizing prompt...", expanded=True)
+        status = st.status("Agent is working...", expanded=True)
         
         try:
-            # --- CALL GEMINI ---
+            # === ATTEMPT 1: Standard Generation ===
+            status.write("Generating Prompt...")
+            
+            # Send User Input to Brain
             response = chat.send_message(user_input)
             prompt_data = response.parsed
             
-            status.write("Prompt Generated!")
-            st.code(response.text, language="json")
-
-            # --- CALL SDXL (Using pipeline function) ---
-            status.update(label="Generative AI Painting...", state="running")
-            
+            status.write("Painting (Attempt 1)...")
             image_b64, error_msg = pipeline.generate_image_sdxl(prompt_data)
             
             if error_msg:
                 st.error(error_msg)
-                status.update(label="Generation Failed", state="error")
-            else:
-                # Display Image
-                st.image(base64.b64decode(image_b64), use_container_width=True)
-                status.update(label="Image Ready", state="complete", expanded=False)
+                st.stop()
 
-            # --- UPDATE MEMORY (Using pipeline function) ---
-            # Manually append to local state
+            # === VISUAL FEEDBACK LOOP ===
+            if pipeline.config['visual_feedback']['enabled']:
+                status.write("VLM: Inspecting image...")
+                
+                # Call the Critic
+                critique = vlm_feedback.analyze_image(image_b64, user_input)
+                
+                if not critique.passed:
+                    status.warning(f"Issue Detected: {critique.reason}")
+                    status.write(f"Auto-fixing: Adding '{critique.missing_elements}'...")
+                    
+                    # === ATTEMPT 2: Auto-Correction ===
+                    correction_prompt = f"""
+                    SYSTEM ALERT: The previous image failed visual inspection.
+                    Reason: {critique.reason}.
+                    Missing Elements: {critique.missing_elements}.
+                    TASK: Regenerate the SDXL JSON prompt. 
+                    Keep the style, but STRONG EMPHASIS on including: {critique.missing_elements}.
+                    """
+                    
+                    # Ask Brain to fix it
+                    response_fix = chat.send_message(correction_prompt)
+                    prompt_data_fix = response_fix.parsed
+                    
+                    status.write("Painting (Attempt 2 - Fixed)...")
+                    image_b64_fix, error_msg_fix = pipeline.generate_image_sdxl(prompt_data_fix)
+                    
+                    if not error_msg_fix:
+                        # Success! Use the fixed image and prompt
+                        image_b64 = image_b64_fix
+                        prompt_data = prompt_data_fix
+                        response = response_fix # Update history to reflect the fix
+                        status.success("Fixed and Regenerated!")
+                    else:
+                        status.error("Retry failed, showing original.")
+                else:
+                    status.write("Visual Check Passed")
+
+            # === FINAL DISPLAY ===
+            st.image(base64.b64decode(image_b64), use_container_width=True)
+            status.update(label="Process Complete", state="complete", expanded=False)
+            
+            # Show the Final Prompt used
+            with st.expander("View Final Prompt Details"):
+                st.json(prompt_data.model_dump())
+
+            # === SAVE HISTORY ===
             st.session_state.local_history.append(types.Content(
                 role="user", parts=[types.Part(text=user_input)]
             ))
             st.session_state.local_history.append(types.Content(
                 role="model", parts=[types.Part(text=response.text)]
             ))
-            
-            # Save to disk
             pipeline.save_memory(st.session_state.local_history)
 
         except Exception as e:
-            st.error(f"Interaction Error: {e}")
+            st.error(f"Workflow Error: {e}")
