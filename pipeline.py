@@ -9,12 +9,12 @@ from google import genai
 from google.genai import types
 from pydantic import BaseModel
 
-# ================= DATA STRUCTURES =================
+
 class SDXLPrompt(BaseModel):
     positive: str
     negative: str
 
-# ================= CONFIG LOADER =================
+# Config Loading
 def load_config(config_path="config.yaml"):
     try:
         with open(config_path, "r", encoding='utf-8') as file:
@@ -23,7 +23,6 @@ def load_config(config_path="config.yaml"):
         print("[ERROR] config.yaml not found.")
         sys.exit(1)
 
-# Initialize Config & Clients globally so they can be imported
 config = load_config()
 
 try:
@@ -33,7 +32,7 @@ except KeyError as e:
     print(f"[ERROR] Missing API Key: {e}")
     sys.exit(1)
 
-# ================= MEMORY MANAGEMENT =================
+# Memory Management
 def load_memory():
     """Loads history from JSON file into Gemini Content objects."""
     if not config['memory']['enabled']:
@@ -71,13 +70,11 @@ def save_memory(history_list):
     file_path = config['memory']['file_path']
     max_depth = config['memory'].get('max_history_depth', 10)
 
-    # FIFO Logic
     if len(history_list) > max_depth:
         history_to_save = history_list[-max_depth:]
     else:
         history_to_save = history_list
 
-    # Serialize
     serializable_history = []
     for content in history_to_save:
         parts_text = []
@@ -103,7 +100,7 @@ def clear_memory_file():
     if os.path.exists(config['memory']['file_path']):
         os.remove(config['memory']['file_path'])
 
-# ================= SDXL GENERATION =================
+# SDXL GENERATION
 def generate_image_sdxl(prompts: SDXLPrompt):
     """Calls Stability API and returns the Base64 string of the image."""
     engine_id = config['models']['painter']

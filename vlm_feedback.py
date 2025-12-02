@@ -4,7 +4,6 @@ from google import genai
 from google.genai import types
 from pydantic import BaseModel
 
-# Import config and client from your existing pipeline
 import pipeline
 
 class FeedbackResult(BaseModel):

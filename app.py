@@ -3,25 +3,23 @@ import base64
 import time
 from google.genai import types
 
-# Import your custom modules
 import pipeline
 import vlm_feedback
 
 # Page Setup
 st.set_page_config(page_title="AI Art Studio", page_icon="🎨", layout="wide")
 
-# ================= SIDEBAR =================
+# Sidebar Settings
 with st.sidebar:
     st.header("Settings")
     st.text(f"Brain: {pipeline.config['models']['brain']}")
     st.text(f"Painter: {pipeline.config['models']['painter']}")
     
-    # Checkbox to enable/disable VLM feedback
     enable_feedback = st.checkbox(
         "Enable Visual Feedback", 
         value=pipeline.config.get('visual_feedback', {}).get('enabled', True)
     )
-    # Update config dynamically based on checkbox
+
     pipeline.config['visual_feedback']['enabled'] = enable_feedback
 
     if st.button("🧹 Clear Memory", type="primary"):
@@ -31,10 +29,9 @@ with st.sidebar:
         time.sleep(1)
         st.rerun()
 
-# ================= MAIN INTERFACE =================
+# Main Interface
 st.title("Context-Aware Art Generator")
 
-# Initialize Session State
 if "local_history" not in st.session_state:
     st.session_state.local_history = pipeline.load_memory()
 
@@ -46,17 +43,14 @@ for msg in st.session_state.local_history:
             if hasattr(p, 'text'): text_content += p.text
             elif isinstance(p, dict): text_content += p.get('text', '')
         
-        # Pretty print JSON for model responses
         if msg.role == "model" and "{" in text_content:
             st.code(text_content, language="json")
         else:
             st.write(text_content)
 
 # 2. Handle New Input
-# CRITICAL: Everything below this line must be indented!
 if user_input := st.chat_input("Describe your idea..."):
     
-    # Show User Message
     with st.chat_message("user"):
         st.write(user_input)
     
@@ -91,7 +85,6 @@ if user_input := st.chat_input("Describe your idea..."):
     }
     """
 
-    # Create Chat Object using imported client
     chat = pipeline.google_client.chats.create(
         model=pipeline.config['models']['brain'],
         history=st.session_state.local_history,
@@ -107,10 +100,8 @@ if user_input := st.chat_input("Describe your idea..."):
         status = st.status("Agent is working...", expanded=True)
         
         try:
-            # === ATTEMPT 1: Standard Generation ===
             status.write("Generating Prompt...")
             
-            # Send User Input to Brain
             response = chat.send_message(user_input)
             prompt_data = response.parsed
             
@@ -121,18 +112,15 @@ if user_input := st.chat_input("Describe your idea..."):
                 st.error(error_msg)
                 st.stop()
 
-            # === VISUAL FEEDBACK LOOP ===
             if pipeline.config['visual_feedback']['enabled']:
                 status.write("VLM: Inspecting image...")
                 
-                # Call the Critic
                 critique = vlm_feedback.analyze_image(image_b64, user_input)
                 
                 if not critique.passed:
                     status.warning(f"Issue Detected: {critique.reason}")
                     status.write(f"Auto-fixing: Adding '{critique.missing_elements}'...")
                     
-                    # === ATTEMPT 2: Auto-Correction ===
                     correction_prompt = f"""
                     SYSTEM ALERT: The previous image failed visual inspection.
                     Reason: {critique.reason}.
@@ -141,7 +129,6 @@ if user_input := st.chat_input("Describe your idea..."):
                     Keep the style, but STRONG EMPHASIS on including: {critique.missing_elements}.
                     """
                     
-                    # Ask Brain to fix it
                     response_fix = chat.send_message(correction_prompt)
                     prompt_data_fix = response_fix.parsed
                     
@@ -149,25 +136,22 @@ if user_input := st.chat_input("Describe your idea..."):
                     image_b64_fix, error_msg_fix = pipeline.generate_image_sdxl(prompt_data_fix)
                     
                     if not error_msg_fix:
-                        # Success! Use the fixed image and prompt
                         image_b64 = image_b64_fix
                         prompt_data = prompt_data_fix
-                        response = response_fix # Update history to reflect the fix
+                        response = response_fix
                         status.success("Fixed and Regenerated!")
                     else:
                         status.error("Retry failed, showing original.")
                 else:
                     status.write("Visual Check Passed")
 
-            # === FINAL DISPLAY ===
+            # Display the Image
             st.image(base64.b64decode(image_b64), use_container_width=True)
             status.update(label="Process Complete", state="complete", expanded=False)
             
-            # Show the Final Prompt used
             with st.expander("View Final Prompt Details"):
                 st.json(prompt_data.model_dump())
 
-            # === SAVE HISTORY ===
             st.session_state.local_history.append(types.Content(
                 role="user", parts=[types.Part(text=user_input)]
             ))

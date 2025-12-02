@@ -1,54 +1,38 @@
-# Multimodal Text-to-Image Agent (LLM + Image Gen) — Prompt Pipeline + Multi-turn Memory + Tool Routing
+# 🎨 AI Art Director - Intelligent Art Pipeline
 
-An **agentic text-to-image assistant** that turns vague user requests into **production-ready English prompts**, supports **multi-turn edits** (e.g., “make it red”, “change to sunset”) without drifting off-topic, and routes requests to the right tool (draw vs. Q&A) to control cost.
-
-Optional: a **visual feedback loop** where a VLM “looks at” the generated image, checks missing requirements, and automatically revises the prompt and regenerates.
+This is an end-to-end Intelligent Art Agent built on **Google Gemini (Brain/VLM)** and **Stability AI (SDXL)**. It goes beyond simple text-to-image generation, acting as a creative system with **long/short-term memory**, **context awareness**, and **visual self-correction** capabilities.
 
 ---
 
-## Demo Features
+## 🏗️ System Architecture
 
-### ✅ Required (Must-have)
-- **Prompt Engineering Pipeline**
-  - Input: vague natural language
-  - Output: high-quality English prompt formatted for a target model family (SDXL / Midjourney / DALL·E 3)
-  - Includes: quality, lighting, composition, camera terms, plus model params.
-
-- **Context Awareness (Multi-turn Memory)**
-  - Maintains session state: previous PromptSpec + constraints checklist
-  - Supports incremental edits: “把它改成红色” updates previous prompt rather than rewriting a random new scene.
-
-- **API Orchestration + Web UI**
-  - UI: Gradio / Streamlit
-  - Flow: user input → agent rewrites prompt (shown in UI) → image generation → show image
-  - Terminal logs: show routing, prompt versioning, tool calls.
-
-### ⭐ Optional (Nice-to-have)
-- **Visual Feedback Loop**
-  - After image generation, a VLM checks whether key constraints appear in the image.
-  - If missing, the agent revises the prompt and regenerates (limited retries).
-- **Function Calling / Routing**
-  - If user asks “how to write prompts”, the agent answers in text only (no image API cost).
-  - If user says “generate an image”, it calls image generation.
-
----
-
-## Architecture Overview
+The system follows a modular design consisting of three core roles: The Brain (Prompt Engineer), The Painter (Rendering Engine), and The Critic (Quality Assurance), all orchestrated via a Streamlit frontend.
 
 ```mermaid
-flowchart LR
-  UI[Gradio/Streamlit UI] --> ORCH[Agent Orchestrator]
-  ORCH --> ROUTER[Intent Router]
+graph TD
+    User[👤 User] -->|1. Input "Draw a cyberpunk cat"| UI[🖥️ Streamlit Web UI]
+    
+    subgraph "🧠 Brain & Memory"
+        UI -->|2. Request + History| Brain[🤖 Gemini 1.5 Pro (Brain)]
+        Brain <-->|Read/Write Context| Memory[(💾 agent_memory.json)]
+        Brain -->|3. Structured Prompt (JSON)| UI
+    end
+    
+    subgraph "🎨 Painter"
+        UI -->|4. Call Generation API| SDXL[🖼️ Stability AI (SDXL)]
+        SDXL -->|5. Return Base64 Image| UI
+    end
+    
+    subgraph "👁️ Visual Feedback Loop"
+        UI -.->|6. (Optional) Image + User Request| VLM[🧐 Gemini VLM (Critic)]
+        VLM -->|7. Visual Analysis| Check{🔍 Pass?}
+        
+        Check -- YES --> Display[✅ Display Final Image]
+        Check -- NO (Missing elements) --> AutoFix[🛠️ Build Correction Prompt]
+        AutoFix -->|8. Trigger Regenerate| Brain
+    end
 
-  ROUTER -->|DRAW/EDIT| PE[Prompt Engineer LLM]
-  ROUTER -->|QA| QA[Text Answer LLM]
-
-  PE <--> MEM[Session Memory (PromptSpec + Checklist)]
-  PE --> ADAPT[Model Adapter (SDXL/MJ/DALL·E3)]
-  ADAPT --> IMG[Image Generation API]
-  IMG --> OUT[Image + Metadata]
-
-  OUT -->|optional| VLM[VLM Validator]
-  VLM -->|revise| PE
-
-  ORCH --> LOG[JSONL Logs]
+    style User fill:#f9f,stroke:#333,stroke-width:2px
+    style Brain fill:#bbf,stroke:#333,stroke-width:2px
+    style SDXL fill:#bfb,stroke:#333,stroke-width:2px
+    style VLM fill:#fbb,stroke:#333,stroke-width:2px

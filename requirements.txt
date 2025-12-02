@@ -1,6 +1,5 @@
-google-genai
-pyyaml
-requests
-pydantic
 streamlit
-openai
+google-genai
+requests
+pyyaml
+pydantic
