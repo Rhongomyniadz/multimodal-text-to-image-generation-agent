@@ -13,19 +13,19 @@ flowchart TD
   user(["User"]) -->|"1. Input: Draw a cyberpunk cat"| ui["Streamlit Web UI"]
 
   subgraph brainmem["Brain and Memory"]
-    ui -->|"2. Request + History"| brain["Gemini 2.5 Flash - Brain"]
+    ui -->|"2. Request + History"| brain["Gemini 2.5 Flash (Brain)"]
     brain -->|"Read context"| mem["agent_memory.json"]
     mem -->|"Write context"| brain
     brain -->|"3. Structured Prompt (JSON)"| ui
   end
 
   subgraph painter["Painter"]
-    ui -->|"4. Call Generation API"| sdxl["Stability AI - SDXL"]
+    ui -->|"4. Call Generation API"| sdxl["Stability AI (SDXL)"]
     sdxl -->|"5. Return Base64 image"| ui
   end
 
   subgraph feedback["Visual Feedback Loop"]
-    ui -->|"6. Optional: Image + User Request"| vlm["Gemini VLM - Critic"]
+    ui -->|"6. Optional: Image + User Request"| vlm["Gemini 2.5 Flash (VLM Critic)"]
     vlm -->|"7. Visual Analysis"| check{"Pass?"}
     check -->|"YES"| display["Display Final Image"]
     check -->|"NO (Missing elements)"| autofix["Build Correction Prompt"]
