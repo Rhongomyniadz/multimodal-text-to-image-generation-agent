@@ -103,6 +103,12 @@ models:
   brain: "gemini-2.5-flash"
   painter: "stable-diffusion-xl-1024-v1-0"
 
+generation:
+  width: 1024
+  height: 1024
+  steps: 40
+  cfg_scale: 7.0
+
 visual_feedback:
   enabled: true
   vlm_model: "gemini-2.5-flash"
