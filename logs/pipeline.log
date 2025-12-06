@@ -1,0 +1,46 @@
+01:11:30 [INFO] AI_Pipeline: Logging to console and file: logs/pipeline.log
+01:11:30 [INFO] AI_Pipeline: Loading configuration from config.yaml...
+01:11:30 [INFO] AI_Pipeline: API Clients initialized successfully.
+01:11:30 [INFO] AI_Pipeline: Loaded 2 messages from memory.
+01:11:33 [INFO] AI_Pipeline: Memory file deleted.
+01:11:33 [INFO] AI_Pipeline: [SYSTEM] User manually cleared memory.
+16:51:08 [INFO] AI_Pipeline: Logging to console and file: logs/pipeline.log
+16:51:08 [INFO] AI_Pipeline: Loading configuration from config.yaml...
+16:51:08 [INFO] AI_Pipeline: API Clients initialized successfully.
+16:51:08 [INFO] AI_Pipeline: No existing memory file found. Starting fresh.
+20:56:07 [INFO] AI_Pipeline: Logging to console and file: logs/pipeline.log
+20:56:07 [INFO] AI_Pipeline: Loading configuration from config.yaml...
+20:56:07 [INFO] AI_Pipeline: API Clients initialized successfully.
+20:56:07 [INFO] AI_Pipeline: No existing memory file found. Starting fresh.
+20:56:20 [INFO] AI_Pipeline: 
+[USER] Input: 'cyberpunk city'
+20:56:20 [INFO] AI_Pipeline: [BRAIN] Analyzing context and optimizing prompt...
+20:56:21 [INFO] AI_Pipeline: [BRAIN] Optimization Complete.
+20:56:21 [INFO] AI_Pipeline:    -> Original: 'cyberpunk city'
+20:56:21 [INFO] AI_Pipeline:    -> Optimized: 'A vibrant, futuristic cyberpunk city at night, drenched in r...'
+20:56:21 [INFO] AI_Pipeline: ========================================
+20:56:21 [INFO] AI_Pipeline: [PAINTER] Received Optimized Prompt Request
+20:56:21 [INFO] AI_Pipeline: [PAINTER] Engine: stable-diffusion-xl-1024-v1-0
+20:56:21 [INFO] AI_Pipeline: [PAINTER] Positive: A vibrant, futuristic cyberpunk city at night, drenched in rain, with glowing neon lights reflecting... (truncated)
+20:56:21 [INFO] AI_Pipeline: ========================================
+20:56:21 [INFO] AI_Pipeline: [PAINTER] Sending request to Stability AI...
+20:56:27 [INFO] AI_Pipeline: [PAINTER] Image generation successful (6.02s)
+20:56:27 [INFO] AI_Pipeline: [CRITIC] Starting Visual Inspection...
+20:56:30 [INFO] AI_Pipeline: [CRITIC] PASS: Image looks correct.
+20:56:31 [INFO] AI_Pipeline: Memory saved to agent_memory.json (2 items).
+20:56:57 [INFO] AI_Pipeline: 
+[USER] Input: 'Show the sun in the sky and also more cars on the road'
+20:56:57 [INFO] AI_Pipeline: [BRAIN] Analyzing context and optimizing prompt...
+20:57:00 [INFO] AI_Pipeline: [BRAIN] Optimization Complete.
+20:57:00 [INFO] AI_Pipeline:    -> Original: 'Show the sun in the sky and also more cars on the road'
+20:57:00 [INFO] AI_Pipeline:    -> Optimized: 'A vibrant, futuristic cyberpunk city with a bright sun in th...'
+20:57:00 [INFO] AI_Pipeline: ========================================
+20:57:00 [INFO] AI_Pipeline: [PAINTER] Received Optimized Prompt Request
+20:57:00 [INFO] AI_Pipeline: [PAINTER] Engine: stable-diffusion-xl-1024-v1-0
+20:57:00 [INFO] AI_Pipeline: [PAINTER] Positive: A vibrant, futuristic cyberpunk city with a bright sun in the sky, many cars on the road, flying veh... (truncated)
+20:57:00 [INFO] AI_Pipeline: ========================================
+20:57:00 [INFO] AI_Pipeline: [PAINTER] Sending request to Stability AI...
+20:57:05 [INFO] AI_Pipeline: [PAINTER] Image generation successful (5.79s)
+20:57:05 [INFO] AI_Pipeline: [CRITIC] Starting Visual Inspection...
+20:57:09 [INFO] AI_Pipeline: [CRITIC] PASS: Image looks correct.
+20:57:09 [INFO] AI_Pipeline: Memory saved to agent_memory.json (4 items).

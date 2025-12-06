@@ -18,8 +18,6 @@ def analyze_image(image_b64: str, user_request: str):
     if not pipeline.config['visual_feedback']['enabled']:
         return FeedbackResult(passed=True, reason="Feedback loop disabled", missing_elements="")
 
-    print("[INFO] VLM: Analyzing image compliance...")
-
     image_bytes = base64.b64decode(image_b64)
 
     SYSTEM_INSTRUCTION = """

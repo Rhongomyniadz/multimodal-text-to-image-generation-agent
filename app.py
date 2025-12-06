@@ -3,39 +3,41 @@ import base64
 import time
 from google.genai import types
 
+# Import pipeline and logging
 import pipeline
-import vlm_feedback
+import vlm_feedback 
 
-# Page Setup
+# Use the logger configured in pipeline
+logger = pipeline.logger
+
 st.set_page_config(page_title="AI Art Studio", page_icon="🎨", layout="wide")
 
-# Sidebar Settings
+# ================= SIDEBAR =================
 with st.sidebar:
     st.header("Settings")
-    st.text(f"Brain: {pipeline.config['models']['brain']}")
-    st.text(f"Painter: {pipeline.config['models']['painter']}")
     
     enable_feedback = st.checkbox(
         "Enable Visual Feedback", 
         value=pipeline.config.get('visual_feedback', {}).get('enabled', True)
     )
-
     pipeline.config['visual_feedback']['enabled'] = enable_feedback
 
-    if st.button("🧹 Clear Memory", type="primary"):
+    if st.button("Clear Memory", type="primary"):
         pipeline.clear_memory_file()
         st.session_state.local_history = []
         st.success("Memory wiped!")
+        logger.info("[SYSTEM] User manually cleared memory.")
         time.sleep(1)
         st.rerun()
 
-# Main Interface
+# ================= MAIN INTERFACE =================
 st.title("Context-Aware Art Generator")
 
+# Load History
 if "local_history" not in st.session_state:
     st.session_state.local_history = pipeline.load_memory()
 
-# 1. Display Chat History
+# Display Chat History
 for msg in st.session_state.local_history:
     with st.chat_message(msg.role):
         text_content = ""
@@ -48,43 +50,22 @@ for msg in st.session_state.local_history:
         else:
             st.write(text_content)
 
-# 2. Handle New Input
+# Handle Input
 if user_input := st.chat_input("Describe your idea..."):
+    
+    # Log User Input
+    logger.info(f"\n[USER] Input: '{user_input}'")
     
     with st.chat_message("user"):
         st.write(user_input)
-    
+
+    # System Prompt
     SYSTEM_INSTRUCTION = """
-    You are a Senior Technical Artist and Prompt Engineer specialized in Stable Diffusion XL (SDXL) v1.0.
-
-    **YOUR MISSION:**
-    Convert user natural language inputs into highly structured, high-fidelity prompts that exploit the full capabilities of SDXL. You maintain persistent context of the visual scene across the conversation.
-
-    **CORE LOGIC & CONTEXT AWARENESS:**
-    1.  **Analyze History:** ALWAYS review the conversation history first.
-        * *New Request:* If the user changes the subject entirely (e.g., "Draw a car" -> "Draw a cat"), start fresh.
-        * *Refinement:* If the user says "make it red", "zoom out", or "add rain", you MUST retrieve the *previous* positive prompt, keep all the existing details (style, composition, lighting), and only apply the specific change.
-    2.  **Expansion (The "Magic"):** Never output a simple prompt. You must expand the user's vague idea into a visual masterpiece using this structure:
-        * **Subject:** Specific details (e.g., "A cat" -> "A fluffy Maine Coon cat with cybernetic goggles").
-        * **Medium:** (e.g., "Digital painting," "35mm film photograph," "Unreal Engine 5 render," "Oil on canvas").
-        * **Style/Artist:** (e.g., "Cyberpunk," "Studio Ghibli style," "Greg Rutkowski," "Minimalist").
-        * **Lighting:** (e.g., "Volumetric lighting," "Cinematic rim lighting," "Golden hour," "Neon ambience").
-        * **Color Palette:** (e.g., "Vibrant teal and orange," "Monochromatic," "Pastel tones").
-        * **Camera/View:** (e.g., "Wide angle," "Macro shot," "Drone view," "Bokeh").
-        * **Quality Boosters:** (e.g., "Masterpiece," "Best quality," "8k," "Highly detailed," "HDR").
-
-    **NEGATIVE PROMPT STRATEGY:**
-    * Always include technical error terms: "text, watermark, signature, blurry, low quality, jpeg artifacts, pixelated, bad anatomy, distorted hands."
-    * Add context-specific negatives (e.g., if drawing a realistic photo, add "cartoon, illustration, painting" to negative).
-
-    **OUTPUT FORMAT:**
-    You must output strictly in JSON format matching this schema:
-    {
-      "positive": "The full, expanded, descriptive prompt string...",
-      "negative": "The technical and stylistic negative prompt..."
-    }
+    You are an expert SDXL Prompt Engineer with persistent memory.
+    ALWAYS check history. Output structured JSON {positive, negative}.
     """
-
+    
+    # Create Chat
     chat = pipeline.google_client.chats.create(
         model=pipeline.config['models']['brain'],
         history=st.session_state.local_history,
@@ -100,11 +81,17 @@ if user_input := st.chat_input("Describe your idea..."):
         status = st.status("Agent is working...", expanded=True)
         
         try:
+            # === ATTEMPT 1: Generate ===
             status.write("Generating Prompt...")
+            logger.info("[BRAIN] Analyzing context and optimizing prompt...")
             
             response = chat.send_message(user_input)
             prompt_data = response.parsed
             
+            logger.info(f"[BRAIN] Optimization Complete.")
+            logger.info(f"   -> Original: '{user_input}'")
+            logger.info(f"   -> Optimized: '{prompt_data.positive[:60]}...'")
+
             status.write("Painting (Attempt 1)...")
             image_b64, error_msg = pipeline.generate_image_sdxl(prompt_data)
             
@@ -112,15 +99,19 @@ if user_input := st.chat_input("Describe your idea..."):
                 st.error(error_msg)
                 st.stop()
 
+            # === VISUAL FEEDBACK LOOP (VLM) ===
             if pipeline.config['visual_feedback']['enabled']:
                 status.write("VLM: Inspecting image...")
+                logger.info("[CRITIC] Starting Visual Inspection...")
                 
                 critique = vlm_feedback.analyze_image(image_b64, user_input)
                 
                 if not critique.passed:
-                    status.warning(f"Issue Detected: {critique.reason}")
-                    status.write(f"Auto-fixing: Adding '{critique.missing_elements}'...")
+                    logger.warning(f"[CRITIC] FAIL: {critique.reason}. Missing: {critique.missing_elements}")
+                    status.warning(f"Issue: {critique.reason}")
+                    status.write(f"Auto-fixing...")
                     
+                    # Correction Prompt
                     correction_prompt = f"""
                     SYSTEM ALERT: The previous image failed visual inspection.
                     Reason: {critique.reason}.
@@ -129,6 +120,7 @@ if user_input := st.chat_input("Describe your idea..."):
                     Keep the style, but STRONG EMPHASIS on including: {critique.missing_elements}.
                     """
                     
+                    logger.info("[BRAIN] Applying fix and regenerating prompt...")
                     response_fix = chat.send_message(correction_prompt)
                     prompt_data_fix = response_fix.parsed
                     
@@ -140,18 +132,22 @@ if user_input := st.chat_input("Describe your idea..."):
                         prompt_data = prompt_data_fix
                         response = response_fix
                         status.success("Fixed and Regenerated!")
+                        logger.info("[SYSTEM] Auto-fix successful.")
                     else:
-                        status.error("Retry failed, showing original.")
+                        status.error("Retry failed, using original.")
+                        logger.error("[SYSTEM] Auto-fix generation failed.")
                 else:
                     status.write("Visual Check Passed")
+                    logger.info("[CRITIC] PASS: Image looks correct.")
 
-            # Display the Image
+            # === DISPLAY & SAVE ===
             st.image(base64.b64decode(image_b64), use_container_width=True)
-            status.update(label="Process Complete", state="complete", expanded=False)
+            status.update(label="Complete", state="complete", expanded=False)
             
-            with st.expander("View Final Prompt Details"):
+            with st.expander("Prompt Details"):
                 st.json(prompt_data.model_dump())
 
+            # Save to Memory
             st.session_state.local_history.append(types.Content(
                 role="user", parts=[types.Part(text=user_input)]
             ))
@@ -161,4 +157,5 @@ if user_input := st.chat_input("Describe your idea..."):
             pipeline.save_memory(st.session_state.local_history)
 
         except Exception as e:
+            logger.error(f"[SYSTEM] Workflow Error: {e}")
             st.error(f"Workflow Error: {e}")
