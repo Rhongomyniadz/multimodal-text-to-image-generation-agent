@@ -44,3 +44,41 @@
 20:57:05 [INFO] AI_Pipeline: [CRITIC] Starting Visual Inspection...
 20:57:09 [INFO] AI_Pipeline: [CRITIC] PASS: Image looks correct.
 20:57:09 [INFO] AI_Pipeline: Memory saved to agent_memory.json (4 items).
+22:03:33 [INFO] AI_Pipeline: Logging to console and file: logs/pipeline.log
+22:03:33 [INFO] AI_Pipeline: Loading configuration from config.yaml...
+22:03:34 [INFO] AI_Pipeline: API Clients initialized successfully.
+22:03:34 [INFO] AI_Pipeline: No existing memory file found. Starting fresh.
+22:03:56 [INFO] AI_Pipeline: 
+[USER] Input: 'cyberpunk city with a cat that is drinking coffee'
+22:03:56 [INFO] AI_Pipeline: [BRAIN] Analyzing context and optimizing prompt...
+22:03:59 [INFO] AI_Pipeline: [BRAIN] Optimization Complete.
+22:03:59 [INFO] AI_Pipeline:    -> Original: 'cyberpunk city with a cat that is drinking coffee'
+22:03:59 [INFO] AI_Pipeline:    -> Optimized: 'A cute cat drinking coffee in a vibrant, futuristic cyberpun...'
+22:03:59 [INFO] AI_Pipeline: [PAINTER] Painting (Attempt 1)...
+22:03:59 [INFO] AI_Pipeline: ========================================
+22:03:59 [INFO] AI_Pipeline: [PAINTER] Received Optimized Prompt Request
+22:03:59 [INFO] AI_Pipeline: [PAINTER] Engine: stable-diffusion-xl-1024-v1-0
+22:03:59 [INFO] AI_Pipeline: [PAINTER] Positive: A cute cat drinking coffee in a vibrant, futuristic cyberpunk city at night, neon lights, glowing si... (truncated)
+22:03:59 [INFO] AI_Pipeline: ========================================
+22:03:59 [INFO] AI_Pipeline: [PAINTER] Sending request to Stability AI...
+22:04:07 [INFO] AI_Pipeline: [PAINTER] Image generation successful (7.81s)
+22:04:07 [INFO] AI_Pipeline: [CRITIC] Starting Visual Inspection...
+22:04:14 [INFO] AI_Pipeline: [CRITIC] PASS: Image looks correct.
+22:04:14 [INFO] AI_Pipeline: Memory saved to agent_memory.json (2 items).
+22:04:35 [INFO] AI_Pipeline: 
+[USER] Input: 'change the cup to a black one'
+22:04:35 [INFO] AI_Pipeline: [BRAIN] Analyzing context and optimizing prompt...
+22:04:38 [INFO] AI_Pipeline: [BRAIN] Optimization Complete.
+22:04:38 [INFO] AI_Pipeline:    -> Original: 'change the cup to a black one'
+22:04:38 [INFO] AI_Pipeline:    -> Optimized: 'A cute cat drinking coffee from a black cup in a vibrant, fu...'
+22:04:38 [INFO] AI_Pipeline: [PAINTER] Painting (Attempt 1)...
+22:04:38 [INFO] AI_Pipeline: ========================================
+22:04:38 [INFO] AI_Pipeline: [PAINTER] Received Optimized Prompt Request
+22:04:38 [INFO] AI_Pipeline: [PAINTER] Engine: stable-diffusion-xl-1024-v1-0
+22:04:38 [INFO] AI_Pipeline: [PAINTER] Positive: A cute cat drinking coffee from a black cup in a vibrant, futuristic cyberpunk city at night, neon l... (truncated)
+22:04:38 [INFO] AI_Pipeline: ========================================
+22:04:38 [INFO] AI_Pipeline: [PAINTER] Sending request to Stability AI...
+22:04:44 [INFO] AI_Pipeline: [PAINTER] Image generation successful (5.95s)
+22:04:44 [INFO] AI_Pipeline: [CRITIC] Starting Visual Inspection...
+22:04:49 [INFO] AI_Pipeline: [CRITIC] PASS: Image looks correct.
+22:04:49 [INFO] AI_Pipeline: Memory saved to agent_memory.json (4 items).

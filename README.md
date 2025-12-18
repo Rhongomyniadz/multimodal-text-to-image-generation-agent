@@ -64,7 +64,8 @@ flowchart TD
 
 ```
 .
-├── app.py              # Frontend entry point (Streamlit UI & Logic orchestration)
+├── app.py              # Frontend entry point (Streamlit UI)
+├── lc_workflow.py      # LangChain orchestration (Brain -> Painter -> Critic -> Auto-fix)
 ├── pipeline.py         # Backend logic (Prompt optimization, Memory, SDXL API)
 ├── vlm_feedback.py     # Visual feedback module (VLM analysis & QA)
 ├── config.yaml         # Configuration (API Keys, Model settings)
