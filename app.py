@@ -90,7 +90,7 @@ if user_input := st.chat_input("Describe your idea..."):
             
             logger.info(f"[BRAIN] Optimization Complete.")
             logger.info(f"   -> Original: '{user_input}'")
-            logger.info(f"   -> Optimized: '{prompt_data.positive[:60]}...'")
+            logger.info(f"   -> Optimized: '{prompt_data.positive}'")
 
             status.write("Painting (Attempt 1)...")
             image_b64, error_msg = pipeline.generate_image_sdxl(prompt_data)
